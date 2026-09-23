@@ -34,7 +34,7 @@ SECTIONS = [
          keywords=r"openai|anthropic|deepmind|gemini|\bmeta\b|\bxai\b|grok|nvidia|\bamd\b|microsoft|mistral|chatgpt|claude|llama|\bgpu|chips?\b|chipmaker|tsmc|intel\b|perplexity|hugging face|qualcomm|broadcom|deepseek|alibaba|sam altman|copilot|google",
          requires=AI_RE + r"|chips?\b|\bgpu|nvidia|openai|anthropic|deepmind|chatgpt"),
     dict(key="ai_general", group="tech", name="AI 综合", quota=10,
-         keywords=r"regulat|\blaw\b|legislat|\bbill\b|policy|congress|senate|\beu\b|ai act|safety|ethic|lawsuit|sue[sd]?\b|copyright|court|\bjobs?\b|workers|layoff|employ|labor|research|study|paper|scientists|researchers|benchmark|governor|white house|ban\b|children|teen",
+         keywords=r"regulat|\blaw\b|legislat|\bbill\b|policy|congress|senate|\beu\b|ai act|safety|ethic|lawsuit|sue[sd]?\b|copyright|court|\bjobs?\b|workers|layoff|employ|labor|research|study|paper|scientists|researchers|benchmark|governor|white house|ban\b|children|teen|government|federal|\bstate\b|regulator|\bftc\b|antitrust|privacy|deepfake|misinformation|election|military|pentagon|defen[cs]e|scrap|training data|alignment|jailbreak|\brisks?\b|university|scien|discover|math|energy use|artists|authors|publishers|licens",
          requires=AI_RE),
     dict(key="ai_industry", group="tech", name="AI 与产业结合", quota=5,
          keywords=r"health|hospital|medical|patient|drug|pharma|bank|financ|insur|fintech|education|school|student|manufactur|factory|retail|legal|lawyer|agricult|farm|logistic|supply chain|customer service|enterprise|accounting|biotech",
@@ -51,7 +51,7 @@ SECTION_BY_KEY = {s["key"]: s for s in SECTIONS}
 AUTHORITY = {
     "Reuters": 3.0, "AP": 3.0, "BBC": 3.0, "New York Times": 3.0, "Wall Street Journal": 3.0,
     "Bloomberg": 3.0, "Financial Times": 3.0, "Washington Post": 2.8, "The Guardian": 2.7,
-    "CNN": 2.6, "Al Jazeera": 2.6, "The Times of Israel": 2.6, "Kyiv Independent": 2.6,
+    "CNN": 2.6, "The Jerusalem Post": 2.3, "Al Jazeera": 2.6, "The Times of Israel": 2.6, "Kyiv Independent": 2.6,
     "Kyiv Post": 2.3, "Politico": 2.6, "TechCrunch": 2.3, "MIT Technology Review": 2.5,
     "IEEE Spectrum": 2.3, "SpaceNews": 2.3, "DatacenterDynamics": 2.2, "AILA 汇编": 2.0,
 }
@@ -64,12 +64,22 @@ SOURCES = [
     # 俄乌
     dict(name="Kyiv Independent", kind="rss", url="https://kyivindependent.com/tag/war-update/rss/",
          html="https://kyivindependent.com/tag/war-update/", sections=["ukraine"], dedicated=True),
-    dict(name="Kyiv Independent", kind="rss", url="https://kyivindependent.com/rss/", sections=["ukraine", "global"]),
+    dict(name="Kyiv Independent", kind="rss", url="https://kyivindependent.com/news-archive/rss/",
+         html="https://kyivindependent.com/news-archive/", sections=["ukraine", "global"]),
+    dict(name="The Guardian", kind="rss", url="https://www.theguardian.com/world/ukraine/rss", sections=["ukraine"]),
     dict(name="Kyiv Post", kind="rss", url="https://www.kyivpost.com/feed", sections=["ukraine"]),
     # 哈以 / 美伊
     dict(name="The Times of Israel", kind="toi_liveblog", url="https://www.timesofisrael.com/liveblog-{date}/",
          sections=["iran", "israel"]),
     dict(name="The Times of Israel", kind="rss", url="https://www.timesofisrael.com/feed/", sections=["iran", "israel"]),
+    # Times of Israel 会 403 拦 GitHub 的服务器，以下几个作为补充
+    dict(name="The Jerusalem Post", kind="rss", url="https://www.jpost.com/rss/rssfeedsheadlines.aspx",
+         sections=["iran", "israel"]),
+    dict(name="The Guardian", kind="rss", url="https://www.theguardian.com/world/israel/rss", sections=["iran", "israel"]),
+    dict(name="The Guardian", kind="rss", url="https://www.theguardian.com/world/gaza/rss", sections=["israel"],
+         dedicated=True),
+    dict(name="The Guardian", kind="rss", url="https://www.theguardian.com/world/iran/rss", sections=["iran"],
+         dedicated=True),
     dict(name="Al Jazeera", kind="rss", url="https://www.aljazeera.com/xml/rss/all.xml",
          sections=["iran", "israel", "ukraine", "immigration", "global"]),
     # 移民
@@ -78,8 +88,8 @@ SOURCES = [
          sections=["immigration"], dedicated=True),
     dict(name="The Guardian", kind="rss", url="https://www.theguardian.com/us-news/usimmigration/rss",
          sections=["immigration"], dedicated=True),
-    dict(name="The Guardian", kind="rss", url="https://www.theguardian.com/uk-news/immigration/rss",
-         sections=["immigration"], dedicated=True),
+    dict(name="Politico", kind="rss", url="https://www.politico.eu/feed/",
+         sections=["immigration", "ukraine", "global", "ai_general"]),
     dict(name="The Guardian", kind="rss", url="https://www.theguardian.com/world/migration/rss",
          sections=["immigration"], dedicated=True),
     dict(name="Politico", kind="rss", url="https://rss.politico.com/politics-news.xml",
@@ -108,6 +118,8 @@ SOURCES = [
     dict(name="TechCrunch", kind="rss", url=TC.format("space"), html="https://techcrunch.com/category/space/",
          sections=["global"], dedicated=True),
     dict(name="SpaceNews", kind="rss", url="https://spacenews.com/feed/", sections=["global"], dedicated=True),
+    dict(name="The Guardian", kind="rss", url="https://www.theguardian.com/science/space/rss", sections=["global"],
+         dedicated=True),
     # AI / 科技
     dict(name="TechCrunch", kind="rss", url=TC.format("artificial-intelligence"),
          html="https://techcrunch.com/category/artificial-intelligence/",
@@ -152,10 +164,13 @@ SOFT_TITLE_RE = (
     r"\bbest\b.*\bof 20\d\d|\bbuying guide|save up to|tickets?\b.*\b(disrupt|event)|techcrunch disrupt|"
     r"strictlyvc|sponsored|\bpartner content|last chance|register now|\bdeal of the day|"
     r"\bthis week in\b|\bweek ahead\b|\bmorning brief|\bevening brief|\bwhat'?s next\b"
+    r"|\btickets?\b|\bdisrupt 20\d\d|get your .*pass|prices? (go|goes|rise|rises) up|early.?bird|\bdiscount\b"
+    r"|\s\|\s[A-Z][\w'.-]+(\s[A-Z][\w'.-]+){0,3}\s*$"
+    r"|\bfootball|\bsoccer|\bfans\b|\bfifa\b|\buefa\b|world cup|olympic|premier league|\bnba\b|\bnfl\b|grand prix"
 )
 SOFT_URL_RE = (
     r"/(opinion|opinions|commentary|comment|analysis|podcasts?|video|videos|live|features?|long-read|"
-    r"newsletters?|sponsored|events?|gallery|interactive|reviews?|deals|podcast|explainers?)/"
+    r"newsletters?|sponsored|events?|gallery|interactive|reviews?|deals|podcast|explainers?|commentisfree|sports?|football)/"
 )
 SOFT_CATEGORY_RE = r"opinion|analysis|podcast|commentary|feature|review|sponsored|video|newsletter|explainer|events"
 

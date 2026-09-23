@@ -81,3 +81,34 @@ def test_parse_toi_and_aila():
       <a href="https://someblog.com/p">Random blog post about immigration policy here</a>"""
     (b,) = parse_aila_clips(aila, date(2026, 9, 22), dict(name="AILA", sections=["immigration"]))
     assert b.source == "AP" and b.date_only
+
+
+def test_real_misses_from_first_run():
+    # 2026-09-23 首次实跑漏网的条目
+    assert is_soft(art("Prices go up in 7 days — get your Disrupt tickets now", source="TechCrunch"))
+    assert is_soft(art("Before blaming [INSERT ISSUE HERE] on immigrants, remember what migrants did for "
+                       "Australia | Jess Harwood", source="The Guardian"))
+    assert is_soft(art("Neutral venue and no away fans - how Israel v Republic of Ireland became so contentious",
+                       source="BBC"))
+    pk = art("Pakistan's latest Trump bet is a drone firm that already sold to India", source="Al Jazeera",
+             sections=("iran", "israel", "ukraine", "immigration", "global"),
+             summary="The company previously supplied drones used by Israel.")
+    assert classify(pk) is None
+
+
+def test_rebalance_fills_ai_general():
+    ai_sections = ("ai_companies", "ai_general", "ai_industry", "ai_infra", "frontier")
+    company_titles = [
+        "Nvidia unveils Blackwell successor GPU", "OpenAI launches cheaper GPT model", "Anthropic releases new Claude",
+        "Meta opens Llama weights to developers", "AMD ships MI500 accelerator", "Qualcomm debuts AI phone chips",
+        "Mistral raises funding from Nvidia", "xAI rolls out Grok update", "Perplexity adds shopping assistant",
+        "Broadcom wins custom chip order from Google", "Alibaba expands DeepSeek rival Qwen"]
+    arts = [art(t + " AI", source="TechCrunch", sections=ai_sections, hours=2 + i)
+            for i, t in enumerate(company_titles)]
+    # 企业词更多、先归 AI 企业动态，但同时符合 AI 综合（政策/安全）
+    dual = [art("OpenAI, Google and Microsoft back AI safety law", source="TechCrunch", sections=ai_sections),
+            art("Nvidia and Meta lobby Congress on AI regulation", source="TechCrunch", sections=ai_sections)]
+    results, _ = select(arts + dual, NOW)
+    by = {r.key: r for r in results}
+    assert len(by["ai_companies"].items) == 10
+    assert {a.title for a in by["ai_general"].items} == {a.title for a in dual}

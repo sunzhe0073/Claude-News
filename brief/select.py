@@ -79,21 +79,27 @@ def dedupe(articles: list[Article]) -> list[Article]:
     return [rep for _, rep, _ in clusters]
 
 
-def classify(a: Article) -> str | None:
+def eligible(a: Article) -> dict[str, float]:
+    """这条新闻可以归入的板块及匹配分。关键词必须在标题里命中（摘要只用来加分），
+    避免摘要里顺带提到"以色列"就把巴基斯坦新闻归进哈以板块。"""
     text_t, text_s = a.title, a.summary
-    best, best_score = None, 0.0
+    out: dict[str, float] = {}
     for key in a.sections:
         if key in _REQ and not (_REQ[key].search(text_t) or _REQ[key].search(text_s)):
             continue
-        score = 2 * len(_KW[key].findall(text_t)) + 0.5 * min(len(_KW[key].findall(text_s)), 4)
-        if score > best_score:
-            best, best_score = key, score
-    if best is None and a.dedicated and a.sections:
+        hits = len(_KW[key].findall(text_t))
+        if hits:
+            out[key] = 2 * hits + 0.5 * min(len(_KW[key].findall(text_s)), 4)
+    if not out and a.dedicated and a.sections:
         key = a.sections[0]
         if key not in _REQ or _REQ[key].search(text_t + " " + text_s):
-            return key
-    # 至少标题命中一次，或摘要命中多次
-    return best if best_score >= 1.0 else None
+            out[key] = 0.5
+    return out
+
+
+def classify(a: Article) -> str | None:
+    el = eligible(a)
+    return max(el, key=lambda k: (el[k], -a.sections.index(k))) if el else None
 
 
 def age_days(a: Article, now: datetime) -> int | None:
@@ -111,6 +117,35 @@ def score(a: Article, now: datetime) -> float:
     if a.section:
         s += 0.3 * min(len(_KW[a.section].findall(a.title)), 3)
     return s
+
+
+def _rebalance(buckets: dict[str, list[Article]], options: dict[int, dict[str, float]], now: datetime) -> None:
+    """条数不够的板块，从候选富余的板块里借"也符合本板块"的新鲜条目
+    （例如 AI 政策类新闻先被 AI 企业动态抢走、AI 综合却凑不够）。借出方仍保留足额。"""
+    quota = {s["key"]: s["quota"] for s in SECTIONS}
+
+    def fresh(key: str) -> list[Article]:
+        return [a for a in buckets[key] if a.age_days <= STANDARD_MAX_AGE]
+
+    for s in SECTIONS:
+        need = s["key"]
+        short = quota[need] - len(fresh(need))
+        if short <= 0:
+            continue
+        donors = sorted(
+            (a for key, arts in buckets.items() if key != need for a in arts
+             if a.age_days <= STANDARD_MAX_AGE and need in options.get(id(a), {})),
+            key=lambda a: -options[id(a)][need])
+        for a in donors:
+            if short <= 0:
+                break
+            if len(fresh(a.section)) <= quota[a.section]:
+                continue
+            buckets[a.section].remove(a)
+            a.section = need
+            a.score = score(a, now)
+            buckets[need].append(a)
+            short -= 1
 
 
 def select(articles: list[Article], now: datetime) -> tuple[list[SectionResult], dict]:
@@ -139,12 +174,16 @@ def select(articles: list[Article], now: datetime) -> tuple[list[SectionResult],
     stats["after_dedupe"] = len(pool)
 
     buckets: dict[str, list[Article]] = {s["key"]: [] for s in SECTIONS}
+    options: dict[int, dict[str, float]] = {}
     for a in pool:
-        key = classify(a)
-        if key:
+        el = eligible(a)
+        if el:
+            key = max(el, key=lambda k: (el[k], -a.sections.index(k)))
             a.section = key
             a.score = score(a, now)
             buckets[key].append(a)
+            options[id(a)] = el
+    _rebalance(buckets, options, now)
 
     results = []
     for s in SECTIONS:
