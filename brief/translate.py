@@ -29,21 +29,32 @@ def _mymemory(text: str) -> str:
     return out
 
 
-def _one(text: str) -> str | None:
+TIME_BUDGET = 180          # 翻译总共最多花 3 分钟，超时的保留英文
+MAX_CONSECUTIVE_FAILS = 3  # 某个接口连续失败这么多次就不再用它（被限流时别一直等）
+
+_fails = {"_google": 0, "_mymemory": 0}
+
+
+def _one(text: str, deadline: float) -> str | None:
     for fn in (_google, _mymemory):
-        for attempt in range(2):
-            try:
-                out = fn(text).strip()
-                if out:
-                    return out
-            except Exception:  # noqa: BLE001
-                time.sleep(1.5 * (attempt + 1))
+        if _fails[fn.__name__] >= MAX_CONSECUTIVE_FAILS or time.monotonic() > deadline:
+            continue
+        try:
+            out = fn(text).strip()
+            if out:
+                _fails[fn.__name__] = 0
+                return out
+        except Exception as e:  # noqa: BLE001
+            _fails[fn.__name__] += 1
+            print(f"[translate] {fn.__name__} 失败：{type(e).__name__}: {str(e)[:100]}", flush=True)
+            time.sleep(1)
     return None
 
 
 def translate_titles(titles: list[str]) -> tuple[list[str | None], int]:
     """返回 (译文列表, 失败条数)。失败的位置是 None。先整批翻（换行分隔），条数对不上再逐条翻。"""
     result: list[str | None] = [None] * len(titles)
+    deadline = time.monotonic() + TIME_BUDGET
     chunks, cur, size = [], [], 0
     for i, t in enumerate(titles):
         if cur and size + len(t) > 2500:
@@ -62,9 +73,10 @@ def translate_titles(titles: list[str]) -> tuple[list[str | None], int]:
                 for i, ln in zip(idxs, lines):
                     result[i] = ln
                 continue
-        except Exception:  # noqa: BLE001
-            pass
+            print(f"[translate] 整批翻译行数不符（{len(lines)}/{len(batch)}），改逐条", flush=True)
+        except Exception as e:  # noqa: BLE001
+            print(f"[translate] 整批翻译失败：{type(e).__name__}: {str(e)[:100]}", flush=True)
         for i in idxs:
-            result[i] = _one(titles[i])
+            result[i] = _one(titles[i], deadline)
             time.sleep(0.3)
     return result, sum(r is None for r in result)

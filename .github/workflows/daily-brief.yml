@@ -28,6 +28,8 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Build brief
+        env:
+          PYTHONUNBUFFERED: "1"
         run: python -m brief --out-dir .
 
       - name: Commit and push

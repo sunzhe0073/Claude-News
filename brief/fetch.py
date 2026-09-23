@@ -50,7 +50,7 @@ class FetchStatus:
     error: str = ""
 
 
-def _get(url: str, timeout: int = 25, tries: int = 2) -> requests.Response:
+def _get(url: str, timeout: int = 15, tries: int = 2) -> requests.Response:
     last: Exception | None = None
     for i in range(tries):
         try:
