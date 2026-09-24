@@ -6,7 +6,7 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from .config import (AUTHORITY, EXTENDED_MAX_AGE, HARD_NEWS_RE, LOCAL_TZ, RELAXED_MAX_AGE, SECTIONS,
+from .config import (AUTHORITY, HARD_NEWS_RE, LOCAL_TZ, MAX_AGE_HOURS, SECTIONS,
                      SOFT_CATEGORY_RE, SOFT_TITLE_RE, SOFT_URL_RE, STANDARD_MAX_AGE)
 from .fetch import Article
 
@@ -164,7 +164,7 @@ def select(articles: list[Article], now: datetime) -> tuple[list[SectionResult],
                 stats["future"] += 1
                 continue
             d = 0
-        if d > EXTENDED_MAX_AGE:
+        if (now - a.published).total_seconds() > MAX_AGE_HOURS * 3600:
             stats["too_old"] += 1
             continue
         a.age_days = d
@@ -188,14 +188,7 @@ def select(articles: list[Article], now: datetime) -> tuple[list[SectionResult],
     results = []
     for s in SECTIONS:
         cands = sorted(buckets[s["key"]], key=lambda a: -a.score)
-        chosen: list[Article] = []
-        for limit in (STANDARD_MAX_AGE, RELAXED_MAX_AGE, EXTENDED_MAX_AGE):
-            for a in cands:
-                if len(chosen) >= s["quota"]:
-                    break
-                if a.age_days <= limit and a not in chosen:
-                    chosen.append(a)
-        chosen.sort(key=lambda a: -a.score)
+        chosen = cands[:s["quota"]]
         if chosen:
             chosen[0].headline = True
             if len(chosen) > 2 and (chosen[1].score >= 0.85 * chosen[0].score or chosen[1].cluster_size >= 2):

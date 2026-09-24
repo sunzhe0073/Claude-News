@@ -5,10 +5,9 @@ from datetime import timedelta, timezone
 # 页面日期、"今天/昨天"一律按北京时间（UTC+8）判断
 LOCAL_TZ = timezone(timedelta(hours=8), "UTC+8")
 
-# 时间窗口（按北京时间的日期差，0=今天，1=昨天）
-STANDARD_MAX_AGE = 1   # 标准窗口：今天 + 昨天
-RELAXED_MAX_AGE = 3    # 允许往前多找 1-2 天
-EXTENDED_MAX_AGE = 6   # 仍不够时适度再往前（3-5 天），这部分会在页面上标注超窗天数
+# 时间窗口：只要发布时间在最近 24 小时内的新闻，更早的一律不要（宁可板块不满）
+MAX_AGE_HOURS = 24
+STANDARD_MAX_AGE = 1   # 按北京时间的日期差（0=今天，1=昨天），24 小时内的新闻最多跨到昨天
 
 GROUPS = [
     ("geo", "地缘政治 / 冲突"),
@@ -28,16 +27,16 @@ SECTIONS = [
     dict(key="immigration", group="geo", name="欧美移民新闻", quota=5,
          keywords=r"immigra|migrant|migration|asylum|deport|\bICE\b|border patrol|\bCBP\b|uscis|\bvisa|h-1b|refugee|green card|small boats|channel crossing|undocumented|citizenship"),
     dict(key="global", group="geo", name="全球格局观察", quota=10,
-         keywords=r"china|chinese|beijing|\bxi\b|tariff|trade war|trade deal|export control|federal reserve|\bfed\b|inflation|interest rate|stocks?\b|markets?\b|treasur|bond yield|economy|\bgdp\b|recession|\bimf\b|\becb\b|oil price|yuan|dollar|wall street|central bank|spacex|nasa|satellite|rocket|\blaunch|orbit|starlink|lunar|\bmoon\b|\bmars\b|blue origin|\besa\b|space station|rare earth"),
+         keywords=r"china|chinese|beijing|\bxi\b|tariff|trade war|trade deal|export control|federal reserve|\bfed\b|inflation|interest rate|\bstocks?\b|\bmarkets?\b|treasur|bond yield|economy|\bgdp\b|recession|\bimf\b|\becb\b|oil price|yuan|dollar|wall street|central bank|spacex|nasa|satellite|rocket|\blaunch|orbit|starlink|lunar|\bmoon\b|\bmars\b|blue origin|\besa\b|space station|rare earth"),
 
     dict(key="ai_companies", group="tech", name="AI 代表性企业动态", quota=10,
-         keywords=r"openai|anthropic|deepmind|gemini|\bmeta\b|\bxai\b|grok|nvidia|\bamd\b|microsoft|mistral|chatgpt|claude|llama|\bgpu|chips?\b|chipmaker|tsmc|intel\b|perplexity|hugging face|qualcomm|broadcom|deepseek|alibaba|sam altman|copilot|google",
+         keywords=r"openai|anthropic|deepmind|gemini|\bmeta\b|\bxai\b|grok|nvidia|\bamd\b|microsoft|mistral|chatgpt|claude|llama|\bgpu|chips?\b|chipmaker|tsmc|\bintel\b|perplexity|hugging face|qualcomm|broadcom|deepseek|alibaba|sam altman|copilot|google",
          requires=AI_RE + r"|chips?\b|\bgpu|nvidia|openai|anthropic|deepmind|chatgpt"),
     dict(key="ai_general", group="tech", name="AI 综合", quota=10,
-         keywords=r"regulat|\blaw\b|legislat|\bbill\b|policy|congress|senate|\beu\b|ai act|safety|ethic|lawsuit|sue[sd]?\b|copyright|court|\bjobs?\b|workers|layoff|employ|labor|research|study|paper|scientists|researchers|benchmark|governor|white house|ban\b|children|teen|government|federal|\bstate\b|regulator|\bftc\b|antitrust|privacy|deepfake|misinformation|election|military|pentagon|defen[cs]e|scrap|training data|alignment|jailbreak|\brisks?\b|university|scien|discover|math|energy use|artists|authors|publishers|licens",
+         keywords=r"regulat|\blaw\b|legislat|\bbill\b|policy|congress|senate|\beu\b|ai act|safety|ethic|lawsuit|\bsue[sd]?\b|copyright|court|\bjobs?\b|workers|layoff|employ|labor|research|study|paper|scientists|researchers|benchmark|governor|white house|\bban\b|children|teen|government|federal|\bstate\b|regulator|\bftc\b|antitrust|privacy|deepfake|misinformation|election|military|pentagon|defen[cs]e|scrap|training data|alignment|jailbreak|\brisks?\b|university|scien|discover|\bmath|energy use|artists|authors|publishers|licens",
          requires=AI_RE),
     dict(key="ai_industry", group="tech", name="AI 与产业结合", quota=5,
-         keywords=r"health|hospital|medical|patient|drug|pharma|bank|financ|insur|fintech|education|school|student|manufactur|factory|retail|legal|lawyer|agricult|farm|logistic|supply chain|customer service|enterprise|accounting|biotech",
+         keywords=r"health|hospital|medical|patient|drug|pharma|bank|financ|insuran|fintech|education|school|student|manufactur|factory|retail|legal|lawyer|agricult|farm|logistic|supply chain|customer service|enterprise|accounting|biotech",
          requires=AI_RE),
     dict(key="ai_infra", group="tech", name="AI 能源与基础设施", quota=5,
          keywords=r"data ?cent|power|electric|grid|energy|gigawatt|megawatt|\bgw\b|\bmw\b|nuclear|compute|cooling|hyperscal|cluster|supercomputer|utilit|turbine|gas plant",
@@ -177,8 +176,8 @@ SOFT_CATEGORY_RE = r"opinion|analysis|podcast|commentary|feature|review|sponsore
 # 标题里出现这些词，重要度加分（硬新闻信号）
 HARD_NEWS_RE = (
     r"kill|dead|strike|attack|missile|ceasefire|truce|sanction|agree|deal\b|treaty|talks|summit|"
-    r"announce|launch|unveil|release|raise[sd]?|funding|billion|acquire|acquisition|merger|ban\b|"
-    r"approve|pass(es|ed)?\b|sign(s|ed)?\b|order|rule[sd]?\b|court|sue[sd]?\b|fine[sd]?\b|record|"
+    r"announce|launch|unveil|release|raise[sd]?|funding|billion|acquire|acquisition|merger|\bban\b|"
+    r"approve|pass(es|ed)?\b|sign(s|ed)?\b|order|rule[sd]?\b|court|\bsue[sd]?\b|fine[sd]?\b|record|"
     r"surge|plunge|tumble|soar|cut|hike|resign|fire[sd]?\b|elect|vote|invade|seize|capture|explosion|"
     r"arrest|deport|tariff"
 )

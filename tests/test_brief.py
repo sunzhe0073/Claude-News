@@ -44,18 +44,25 @@ def test_select_windows_and_headlines():
     arts = [art("Russian drone attack hits Kharkiv power station", hours=3),
             art("EU agrees new sanctions package on Russian oil exports", hours=4),
             art("Ukraine retakes village near Pokrovsk, army says", hours=5)]
-    old = art("Ukraine and Russia hold prisoner exchange talks in Istanbul", hours=24 * 4 + 2)
+    old = art("Ukraine and Russia hold prisoner exchange talks in Istanbul", hours=25)
     too_old = art("Zelensky meets European leaders in Brussels summit", hours=24 * 10)
     results, stats = select(arts + [old, too_old], NOW)
     ua = next(r for r in results if r.key == "ukraine")
-    assert len(ua.items) == 4 and ua.items[0].headline
-    assert any(a.age_days == 4 for a in ua.items)
-    assert stats["too_old"] == 1
+    assert len(ua.items) == 3 and ua.items[0].headline  # 超过 24 小时的一律不要，宁可不满
+    assert stats["too_old"] == 2
     israel = next(r for r in results if r.key == "israel")
     assert israel.insufficient and not israel.items
 
     html = render(results, [], stats, NOW, 0)
-    assert "超出标准窗口 3 天" in html and "本板块本次覆盖不足" in html and '<li class="lead">' in html
+    assert "超出标准窗口" not in html and "本板块本次覆盖不足" in html and '<li class="lead">' in html
+
+
+def test_keywords_need_word_start():
+    g = ("global",)
+    assert classify(art("Lidl banned from selling copycat Birkenstock sandals, Dutch court rules",
+                        source="BBC", sections=g)) is None
+    assert classify(art("US stocks fall as bond yields jump", sections=g)) == "global"
+    assert classify(art("Supermarket chain opens new stores", sections=g)) is None
 
 
 RSS = b"""<?xml version="1.0"?><rss version="2.0"><channel><title>t</title>
