@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from html import escape
 
-from .config import GROUPS, LOCAL_TZ, STANDARD_MAX_AGE
+from .config import GROUPS, LOCAL_TZ, MAX_AGE_HOURS
 from .fetch import Article, FetchStatus
 from .select import SectionResult
 
@@ -71,8 +71,6 @@ def _item(a: Article) -> str:
     tags = ""
     if not a.title_zh:
         tags += '<span class="tag">未翻译</span>'
-    if a.age_days > STANDARD_MAX_AGE:
-        tags += f'<span class="tag">超出标准窗口 {a.age_days - STANDARD_MAX_AGE} 天</span>'
     meta = " · ".join(x for x in (escape(a.source), _fmt_time(a)) if x)
     return (f'<li{cls}><a class="t" href="{escape(a.url, quote=True)}" title="{escape(a.title, quote=True)}" '
             f'target="_blank" rel="noopener">{escape(title)}</a>'
@@ -106,13 +104,8 @@ def render(results: list[SectionResult], statuses: list[FetchStatus], stats: dic
             f'<a href="#{r.key}">{escape(r.name)} {len(r.items)}</a>' for r in rs) + "</div>")
         body.append(f'<h2 class="group">{escape(gname)}</h2>' + "".join(_section(r) for r in rs))
 
-    old = [(r, a) for r in results for a in r.items if a.age_days > STANDARD_MAX_AGE]
     foot = [f"<div>生成于 {local:%Y-%m-%d %H:%M}（北京时间）· 共 {total}/{quota} 条 · "
-            f"标准时间窗口：今天 + 昨天（北京时间）· 板块按当日热度排序 · ★ 为板块头条</div>"]
-    if old:
-        foot.append("<h4>超出标准时间窗口的条目</h4><ul>" + "".join(
-            f"<li>{escape(r.name)}｜{escape(a.title_zh or a.title)}（{escape(a.source)}，"
-            f"超出 {a.age_days - STANDARD_MAX_AGE} 天）</li>" for r, a in old) + "</ul>")
+            f"时间窗口：最近 {MAX_AGE_HOURS} 小时· 板块按当日热度排序 · ★ 为板块头条</div>"]
     short = [r for r in results if len(r.items) < r.quota]
     if short:
         foot.append("<h4>数量不足的板块</h4><div>" + "；".join(
