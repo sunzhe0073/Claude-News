@@ -54,7 +54,7 @@ def test_select_windows_and_headlines():
     assert israel.insufficient and not israel.items
 
     html = render(results, [], stats, NOW, 0)
-    assert "超出标准窗口" not in html and "本板块本次覆盖不足" in html and '<li class="lead">' in html
+    assert "最近 24 小时" in html and "本板块本次覆盖不足" in html and '<li class="lead">' in html
 
 
 def test_keywords_need_word_start():
