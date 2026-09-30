@@ -2,7 +2,7 @@ name: Daily brief
 
 on:
   schedule:
-    - cron: "0 1 * * *"   # UTC 01:00 = 北京时间 09:00（GitHub 高峰期可能延迟几分钟到几十分钟）
+    - cron: "0 22 * * *"   # UTC 22:00 = 北京时间 06:00（提前触发，抵消 GitHub 高峰期数小时的延迟，争取 09:00 前更新）
   workflow_dispatch:       # Actions 页面手动触发
 
 permissions:

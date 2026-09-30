@@ -1,6 +1,6 @@
 # 每日新闻简报
 
-每天北京时间 09:00 由 GitHub Actions 自动运行：抓取国际权威媒体的分类页/RSS/liveblog → 按规则筛选（只要最近 24 小时、剔除评论与软新闻、跨媒体去重、分板块、挑头条、按热度排序）→ 标题免费翻译为中文 → 生成 `index.html` 并 commit，由 GitHub Pages 发布到固定网址。每天另存一份到 `archive/daily-brief-YYYY-MM-DD.html`。
+每天北京时间 06:00（实际因 GitHub 排队常晚到上午/下午）由 GitHub Actions 自动运行：抓取国际权威媒体的分类页/RSS/liveblog → 按规则筛选（只要最近 24 小时、剔除评论与软新闻、跨媒体去重、分板块、挑头条、按热度排序）→ 标题免费翻译为中文 → 生成 `index.html` 并 commit，由 GitHub Pages 发布到固定网址。每天另存一份到 `archive/daily-brief-YYYY-MM-DD.html`。
 
 规则见 [`docs/SPEC.md`](docs/SPEC.md)。
 
