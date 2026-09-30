@@ -129,7 +129,7 @@ def render(results: list[SectionResult], statuses: list[FetchStatus], stats: dic
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>每日新闻简报 {local:%Y-%m-%d}</title>
-<meta name="description" content="每日国际要闻与前沿科技简报（中文标题，原文链接）">
+<meta name="description" content="每日国际要闻、前沿科技与东南亚简报（中文标题，原文链接）">
 <style>{CSS}</style>
 </head>
 <body>

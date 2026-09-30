@@ -12,7 +12,13 @@ STANDARD_MAX_AGE = 1   # 按北京时间的日期差（0=今天，1=昨天），
 GROUPS = [
     ("geo", "地缘政治 / 冲突"),
     ("tech", "前沿科技"),
+    ("sea", "东南亚"),
 ]
+
+SEA_RE = (r"thailand|\bthai\b|bangkok|indonesia|jakarta|prabowo|malaysia|\banwar\b|kuala lumpur|singapore|"
+          r"philippine|manila|\bmarcos\b|duterte|vietnam|hanoi|ho chi minh|myanmar|\bburma|naypyidaw|cambodia|"
+          r"phnom penh|hun sen|hun manet|\blaos\b|vientiane|brunei|timor-leste|east timor|\bdili\b|\basean\b|"
+          r"south china sea|mekong|sumatra|\bjava\b|borneo|\bbali\b|sulawesi|papua|mindanao|luzon")
 
 AI_RE = r"\bAI\b|\bA\.I\.|artificial intelligence|machine learning|\bLLMs?\b|chatbot|generative|\bgenAI\b|\bAGI\b|neural"
 
@@ -43,6 +49,9 @@ SECTIONS = [
          requires=AI_RE + r"|data ?cent|hyperscal|compute"),
     dict(key="frontier", group="tech", name="前沿科技综合", quota=10,
          keywords=r"fusion|nuclear|battery|batteries|solar|\bev\b|\bevs\b|electric vehicle|robotaxi|autonomous|self-driving|driverless|waymo|zoox|tesla|robot|humanoid|hydrogen|geothermal|reactor|lidar|drone|quantum|clean energy|wind"),
+
+    # 东南亚：每天最多 10 条（用户要求）；区域专属信源不需关键词，泛亚洲/国际信源须标题命中国家/城市名
+    dict(key="seasia", group="sea", name="东南亚新闻", quota=10, keywords=SEA_RE),
 ]
 SECTION_BY_KEY = {s["key"]: s for s in SECTIONS}
 
@@ -53,6 +62,8 @@ AUTHORITY = {
     "CNN": 2.6, "The Jerusalem Post": 2.3, "Al Jazeera": 2.6, "The Times of Israel": 2.6, "Kyiv Independent": 2.6,
     "Kyiv Post": 2.3, "Politico": 2.6, "TechCrunch": 2.3, "MIT Technology Review": 2.5,
     "IEEE Spectrum": 2.3, "SpaceNews": 2.3, "DatacenterDynamics": 2.2, "AILA 汇编": 2.0,
+    "CNA": 2.6, "The Straits Times": 2.5, "Bangkok Post": 2.3, "The Jakarta Post": 2.3, "Rappler": 2.2,
+    "VnExpress International": 2.0,
 }
 
 TC = "https://techcrunch.com/category/{}/feed/"
@@ -80,7 +91,7 @@ SOURCES = [
     dict(name="The Guardian", kind="rss", url="https://www.theguardian.com/world/iran/rss", sections=["iran"],
          dedicated=True),
     dict(name="Al Jazeera", kind="rss", url="https://www.aljazeera.com/xml/rss/all.xml",
-         sections=["iran", "israel", "ukraine", "immigration", "global"]),
+         sections=["seasia", "iran", "israel", "ukraine", "immigration", "global"]),
     # 移民
     dict(name="AILA 汇编", kind="aila_clips",
          url="https://www.aila.org/immigration-news/daily-immigration-news-clips-{month}-{day}-{year}",
@@ -95,10 +106,10 @@ SOURCES = [
          sections=["immigration", "ai_general"]),
     # 综合大报（按关键词分流到各板块）
     dict(name="BBC", kind="rss", url="https://feeds.bbci.co.uk/news/world/rss.xml",
-         sections=["iran", "israel", "ukraine", "immigration", "global"]),
+         sections=["seasia", "iran", "israel", "ukraine", "immigration", "global"]),
     dict(name="BBC", kind="rss", url="https://feeds.bbci.co.uk/news/business/rss.xml", sections=["global"]),
     dict(name="New York Times", kind="rss", url="https://rss.nytimes.com/services/xml/rss/nyt/World.xml",
-         sections=["iran", "israel", "ukraine", "immigration", "global"]),
+         sections=["seasia", "iran", "israel", "ukraine", "immigration", "global"]),
     dict(name="New York Times", kind="rss", url="https://rss.nytimes.com/services/xml/rss/nyt/Business.xml",
          sections=["global"]),
     dict(name="Wall Street Journal", kind="rss", url="https://feeds.a.dj.com/rss/RSSWorldNews.xml",
@@ -140,6 +151,21 @@ SOURCES = [
          sections=["frontier", "ai_infra", "ai_general"]),
     dict(name="DatacenterDynamics", kind="rss", url="https://www.datacenterdynamics.com/en/rss/",
          sections=["ai_infra"], dedicated=True),
+    # 东南亚：泛亚洲信源（标题须命中国家/城市名）
+    dict(name="CNA", kind="rss", url="https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml&category=6511",
+         sections=["seasia"]),
+    dict(name="The Straits Times", kind="rss", url="https://www.straitstimes.com/news/asia/rss.xml", sections=["seasia"]),
+    dict(name="BBC", kind="rss", url="https://feeds.bbci.co.uk/news/world/asia/rss.xml", sections=["seasia"]),
+    dict(name="New York Times", kind="rss", url="https://rss.nytimes.com/services/xml/rss/nyt/AsiaPacific.xml",
+         sections=["seasia"]),
+    # 东南亚：各国本地权威媒体（整个信源都是本国新闻，不需关键词）
+    dict(name="Bangkok Post", kind="rss", url="https://www.bangkokpost.com/rss/data/topstories.xml",
+         sections=["seasia"], dedicated=True),
+    dict(name="The Jakarta Post", kind="rss", url="https://www.thejakartapost.com/rss", sections=["seasia"],
+         dedicated=True),
+    dict(name="Rappler", kind="rss", url="https://www.rappler.com/feed/", sections=["seasia"], dedicated=True),
+    dict(name="VnExpress International", kind="rss", url="https://e.vnexpress.net/rss/news.rss",
+         sections=["seasia"], dedicated=True),
 ]
 
 # AILA 汇编页里外链域名 -> 媒体名（只收权威媒体）

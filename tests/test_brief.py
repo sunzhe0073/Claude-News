@@ -103,6 +103,25 @@ def test_real_misses_from_first_run():
     assert classify(pk) is None
 
 
+def test_seasia_section_capped_at_10():
+    # 区域信源的新闻不需关键词；泛亚洲信源须标题命中东南亚国家/城市
+    titles = ["Floods displace thousands in southern provinces", "Rice exports rise on strong Asian demand",
+              "Parliament passes new election law", "Airport expansion wins final approval",
+              "Central bank holds benchmark rate steady", "Fishing dispute escalates near disputed reef",
+              "Students rally against tuition increase", "Coal plant closure delayed by two years",
+              "Dockworkers strike halts container port", "Tourism visas eased for Chinese visitors",
+              "Rubber prices tumble on weak tyre demand", "Rail link contract awarded to consortium",
+              "Court jails former minister over graft", "Earthquake damages temples in northern town"]
+    local = [art(t, source="Bangkok Post", sections=("seasia",), hours=2 + i, dedicated=True)
+             for i, t in enumerate(titles)]
+    pan = art("Indonesia and Malaysia agree on palm oil talks", source="CNA", sections=("seasia",))
+    other = art("Japan cabinet approves new defence budget", source="CNA", sections=("seasia",))
+    assert classify(pan) == "seasia" and classify(other) is None
+    results, _ = select(local + [pan, other], NOW)
+    sea = next(r for r in results if r.key == "seasia")
+    assert len(sea.items) == 10 and sea.group == "sea"
+
+
 def test_rebalance_fills_ai_general():
     ai_sections = ("ai_companies", "ai_general", "ai_industry", "ai_infra", "frontier")
     company_titles = [
