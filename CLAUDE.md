@@ -8,3 +8,4 @@
 - 本地跑：`pip install -r requirements.txt && python -m brief --out-dir /tmp/out`
 - 测试：`python -m pytest tests -q`
 - 不使用任何付费 API（用户明确要求免费方案）
+- 不用功能分支和 PR：所有改动直接提交并推送到 `main`（用户 2026-09-30 明确要求）
