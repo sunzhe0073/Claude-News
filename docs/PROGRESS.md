@@ -33,7 +33,7 @@
 - 新增「东南亚」分组与「东南亚新闻」板块（每天最多 10 条）：`config.py` 加 `SEA_RE`、`seasia` 板块、CNA / 海峡时报 / Bangkok Post / Jakarta Post / Rappler / VnExpress 及 BBC Asia、NYT Asia Pacific 信源；BBC/NYT/Al Jazeera 国际频道也可按国家名分流。
 - **待确认**：开发沙箱访问不了这些站点，新增 RSS 地址未实测。下次 Actions 运行后看页面底部"抓取明细"，失败的信源需换地址（Jakarta Post、Bangkok Post 的地址最不确定）。
 
-- 定时从北京 09:00 提前到 06:00（cron `0 22 * * *`）：最近几天 09:00 的任务都拖到 13:44–14:33 才提交。待观察提前后是否能在 09:00 前更新；用户想要的"打开网页即刷新"因 Pages 是静态站点，需要令牌中转，暂不做。
+- 定时从北京 09:00 提前到 02:00（cron `0 18 * * *`，先改过 06:00）：最近几天 09:00 的任务都拖到 13:44–14:33 才提交。待观察提前后是否能在 09:00 前更新；用户想要的"打开网页即刷新"因 Pages 是静态站点，需要令牌中转，暂不做。
 
 ## 下一步
 1. **恢复时先确认网页是否每天自动更新**：Actions 里 Daily brief 是否每天成功；网页顶部日期是否是当天。若 Actions 成功但网页仍是 09-23，说明 bot 推送没有触发 Pages 部署，需要在工作流里加 `actions/deploy-pages` 部署步骤（并把 Pages Source 改成 GitHub Actions）。
